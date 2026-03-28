@@ -1,0 +1,29 @@
+{
+  "name": "node-red-homematic",
+  "version": "1.0.0",
+  "description": "",
+  "license": "ISC",
+  "author": "",
+  "type": "commonjs",
+  "main": "index.js",
+  "scripts": {
+    "build": "tsc && cp src/*.html build/ && cp src/ccu/*.html build/ccu/"
+  },
+  "node-red": {
+    "nodes": {
+      "ccu": "build/ccu/ccu.js",
+      "value": "build/value.js"
+    }
+  },
+  "dependencies": {
+    "homematic-xmlrpc": "^1.0.2",
+    "node": "^25.8.2",
+    "node-red": "^4.1.8",
+    "zod": "^4.3.6"
+  },
+  "devDependencies": {
+    "@types/node": "^25.5.0",
+    "@types/node-red": "^1.3.5",
+    "@types/xmlrpc": "^1.3.10"
+  }
+}

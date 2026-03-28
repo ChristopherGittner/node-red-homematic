@@ -1,0 +1,103 @@
+<script type="text/javascript">
+    RED.nodes.registerType('value', {
+        category: 'homematic',
+        color: '#a6bbcf',
+        defaults: {
+            ccu: { value: "", type: "ccu", required: true },
+            interface: { value: "BidCos-RF", required: true },
+            channel: { value: "" },
+            valueName: { value: "" }
+        },
+        inputs: 0,
+        outputs: 1,
+        icon: "file.svg",
+        label: function () {
+            return "Value";
+        },
+        oneditprepare: function () {
+            const self = this;
+            let cachedChannels = [];
+
+            function populateValueKeys(resetKey) {
+                const channelAddr = $('#node-input-channel').val();
+                const $keySelect = $('#node-input-valueName');
+                const current = resetKey ? '' : self.valueName;
+                $keySelect.empty();
+                $keySelect.append($('<option>').val('').text('-- All Values --'));
+
+                const ch = cachedChannels.find(function (c) { return c.address === channelAddr; });
+                if (ch && ch.values) {
+                    ch.values.forEach(function (v) {
+                        $keySelect.append($('<option>').val(v).text(v));
+                    });
+                }
+                $keySelect.val(current);
+            }
+
+            function loadChannels(resetChannel) {
+                const ccuId = $('#node-input-ccu').val();
+                if (!ccuId) return;
+
+                const selectedIface = $('#node-input-interface').val();
+                const isHmIP = selectedIface === 'Hm-IP';
+                const current = resetChannel ? '' : self.channel;
+
+                $.getJSON('/homematic/ccu/' + ccuId + '/channels', function (channels) {
+                    cachedChannels = channels;
+                    const $select = $('#node-input-channel');
+                    $select.empty();
+                    $select.append($('<option>').val('').text('-- All Channels --'));
+
+                    channels
+                        .filter(function (c) {
+                            if (c.address.indexOf(':') === -1) return false;
+                            if (!c.iface) return true;
+                            return isHmIP
+                                ? c.iface.toLowerCase().indexOf('hmip') !== -1
+                                : c.iface === 'BidCos-RF';
+                        })
+                        .forEach(function (c) {
+                            const label = c.deviceName
+                                ? c.deviceName + ' - Ch.' + c.channelNumber + ' (' + c.name + ')'
+                                : c.name;
+                            $select.append($('<option>').val(c.address).text(label));
+                        });
+
+                    $select.val(current);
+                    populateValueKeys(resetChannel);
+                });
+            }
+
+            $('#node-input-ccu').change(function () { loadChannels(false); });
+            $('#node-input-interface').change(function () { loadChannels(true); });
+            $('#node-input-channel').change(function () { populateValueKeys(true); });
+            loadChannels(false);
+        }
+    });
+</script>
+
+<script type="text/html" data-template-name="value">
+    <div class="form-row">
+        <label for="node-input-ccu"><i class="fa fa-bookmark"></i> CCU</label>
+        <input type="ccu" id="node-input-ccu" data-i18n="[placeholder]node-red:common.label">
+    </div>
+    <div class="form-row">
+        <label for="node-input-interface"><i class="fa fa-sitemap"></i> Interface</label>
+        <select id="node-input-interface">
+            <option value="BidCos-RF">BidCos-RF (Homematic)</option>
+            <option value="Hm-IP">Hm-IP (Homematic IP)</option>
+        </select>
+    </div>
+    <div class="form-row">
+        <label for="node-input-channel"><i class="fa fa-plug"></i> Channel</label>
+        <select id="node-input-channel" style="width: 70%;">
+            <option value="">-- All Channels --</option>
+        </select>
+    </div>
+    <div class="form-row">
+        <label for="node-input-valueName"><i class="fa fa-tag"></i> Value</label>
+        <select id="node-input-valueName" style="width: 70%;">
+            <option value="">-- All Values --</option>
+        </select>
+    </div>
+</script>
