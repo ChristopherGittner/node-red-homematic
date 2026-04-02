@@ -12,7 +12,8 @@
   "node-red": {
     "nodes": {
       "ccu": "build/ccu/ccu.js",
-      "value": "build/value.js"
+      "value": "build/value.js",
+      "set-value": "build/set-value.js"
     }
   },
   "dependencies": {
