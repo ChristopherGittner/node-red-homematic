@@ -1,17 +1,9 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.getChannels = exports.Channel = void 0;
+exports.getChannels = void 0;
+const CcuConnection_1 = require("./CcuConnection");
 const CcuInterface_1 = require("./CcuInterface");
 const zod_1 = require("zod");
-exports.Channel = zod_1.z.object({
-    address: zod_1.z.string(),
-    id: zod_1.z.number(),
-    name: zod_1.z.string(),
-    iface: zod_1.z.enum(CcuInterface_1.INTERFACE_TYPE).optional(),
-    deviceName: zod_1.z.string().optional(),
-    channelNumber: zod_1.z.number().optional(),
-    values: zod_1.z.array(zod_1.z.string()).optional(),
-});
 const SCRIPT_GET_CHANNELS = `
 !# devices.rega
 !#
@@ -106,7 +98,7 @@ async function getChannels(host, authentication) {
             channel.iface = undefined;
         }
     }
-    return zod_1.z.array(exports.Channel).parse(rawChannels);
+    return zod_1.z.array(CcuConnection_1.Channel).parse(rawChannels);
 }
 exports.getChannels = getChannels;
 //# sourceMappingURL=Rega.js.map

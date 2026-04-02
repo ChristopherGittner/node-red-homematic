@@ -131,6 +131,10 @@ class CcuInterface extends events_1.default {
     async init() {
         this.log.trace("init");
         this.stopPingInterval();
+        // Close all active HTTP connections so the CCU must establish fresh ones after re-init
+        if (this.server) {
+            this.server.httpServer.closeAllConnections();
+        }
         try {
             this.restartReceiveTimeout();
             // Unregister at CCU (ID to the ccu is empty)

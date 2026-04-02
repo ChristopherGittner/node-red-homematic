@@ -27,8 +27,8 @@ export = function (RED: NodeAPI): void {
         this.channel = config.channel;
         this.valueName = config.valueName;
 
+        // Listen to events from the CCU and send them to the output if they match the configuration
         this.handleInput = (iface: INTERFACE_TYPE, channel: string, namedChannel: string | undefined, valueName: string, value: any) => {
-            RED.log.trace(this.channel);
             if (iface !== this.interface) return;
             if (this.channel && channel !== this.channel) return;
             if (this.valueName && valueName !== this.valueName) return;

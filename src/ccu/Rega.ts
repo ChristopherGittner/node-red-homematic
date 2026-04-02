@@ -1,16 +1,6 @@
+import { Channel } from "./CcuConnection";
 import { INTERFACE_TYPE } from "./CcuInterface";
 import { z } from "zod";
-
-export const Channel = z.object({
-    address: z.string(),
-    id: z.number(),
-    name: z.string(),
-    iface: z.enum(INTERFACE_TYPE).optional(),
-    deviceName: z.string().optional(),
-    channelNumber: z.number().optional(),
-    values: z.array(z.string()).optional(),
-});
-export type Channel = z.infer<typeof Channel>;
 
 const SCRIPT_GET_CHANNELS = `
 !# devices.rega

@@ -3,14 +3,41 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.CcuConnection = void 0;
+exports.CcuConnection = exports.Channel = void 0;
 const events_1 = __importDefault(require("events"));
 const CcuInterface_js_1 = require("./CcuInterface.js");
 const Rega_js_1 = require("./Rega.js");
+const zod_1 = __importDefault(require("zod"));
+/**
+ * Represents a HomeMatic channel as retrieved from the CCU via Rega.
+ * A channel belongs to a physical device and exposes one or more controllable values.
+ */
+exports.Channel = zod_1.default.object({
+    /** Hardware address of the channel, e.g. `"LEQ123456:1"`. */
+    address: zod_1.default.string(),
+    /** Unique numeric ID assigned by the CCU. */
+    id: zod_1.default.number(),
+    /** Human-readable name of the channel as configured in the CCU. */
+    name: zod_1.default.string(),
+    /** The HomeMatic interface this channel belongs to. */
+    iface: zod_1.default.enum(CcuInterface_js_1.INTERFACE_TYPE).optional(),
+    /** Human-readable name of the parent device as configured in the CCU. */
+    deviceName: zod_1.default.string().optional(),
+    /** Zero-based channel index within the parent device. */
+    channelNumber: zod_1.default.number().optional(),
+    /** List of value names (datapoints) available on this channel. */
+    values: zod_1.default.array(zod_1.default.string()).optional(),
+});
 /**
  * Manages one CCU with a BidCos-RF + Hm-IP interface.
  */
 class CcuConnection extends events_1.default {
+    /**
+     * Creates a new CcuConnection but does not start the XML-RPC listeners yet.
+     * Call {@link start} to connect to the CCU.
+     * @param options Connection configuration.
+     * @param log Node-RED logger used for trace and error output.
+     */
     constructor(options, log) {
         super();
         this.options = options;
@@ -33,6 +60,11 @@ class CcuConnection extends events_1.default {
         });
         this.hmIPIface.on("event", this.handleInterfaceEvent.bind(this, CcuInterface_js_1.INTERFACE_TYPE.HMIP));
     }
+    /**
+     * Starts the connection to the CCU.
+     * Fetches the initial channel list from Rega, registers both XML-RPC interfaces
+     * with the CCU, and schedules periodic Rega reloads.
+     */
     async start() {
         await this.reloadRega();
         await Promise.all([
@@ -40,14 +72,20 @@ class CcuConnection extends events_1.default {
             this.hmIPIface.start()
         ]);
         const scheduleReload = () => {
-            setTimeout(async () => {
+            this.regaReloadTimeout = setTimeout(async () => {
                 await this.reloadRega();
                 scheduleReload();
             }, this.options.regaInterval * 1000);
         };
         scheduleReload();
     }
+    /**
+     * Stops both XML-RPC interfaces, unregisters them from the CCU,
+     * and cancels the periodic Rega reload.
+     */
     async stop() {
+        clearTimeout(this.regaReloadTimeout);
+        this.regaReloadTimeout = undefined;
         await Promise.all([
             this.bidCosIface.stop(),
             this.hmIPIface.stop()
@@ -101,6 +139,14 @@ class CcuConnection extends events_1.default {
         }
         return `${parentDevice.address}:${channelId}`;
     }
+    /**
+     * Handles a raw datapoint event from a {@link CcuInterface} and re-emits it
+     * on this connection, enriched with the human-readable channel name.
+     * @param iface The interface that produced the event.
+     * @param channel Hardware channel address.
+     * @param valueName Name of the changed datapoint.
+     * @param value The new value.
+     */
     handleInterfaceEvent(iface, channel, valueName, value) {
         const namedChannel = this.replaceDeviceName(channel);
         this.emit("event", iface, channel, namedChannel, valueName, value);
@@ -125,9 +171,18 @@ class CcuConnection extends events_1.default {
                 return this.hmIPIface.setValue(channel, valueName, value);
         }
     }
+    /**
+     * Returns the current list of channels loaded from Rega.
+     * The list is refreshed automatically at the interval specified in {@link CcuConnectionOptions.regaInterval}.
+     */
     getChannels() {
         return this.channels;
     }
+    /**
+     * Fetches the full channel list from the CCU via Rega and updates the cached
+     * {@link channels} array, including available value names for each channel.
+     * Errors are logged but do not propagate so the periodic reload schedule is preserved.
+     */
     async reloadRega() {
         try {
             this.log.trace("Reload Channels");

@@ -173,6 +173,11 @@ export class CcuInterface extends EventEmitter {
 
         this.stopPingInterval();
 
+        // Close all active HTTP connections so the CCU must establish fresh ones after re-init
+        if (this.server) {
+            this.server.httpServer.closeAllConnections();
+        }
+
         try {
             this.restartReceiveTimeout();
 
