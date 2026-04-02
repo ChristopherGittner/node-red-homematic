@@ -3,7 +3,7 @@ import { CcuConnection } from "./CcuConnection";
 import { CcuConfig, CcuNode } from "./CcuTypes";
 
 export = function (RED: NodeAPI): void {
-    RED.httpAdmin.get('/homematic/ccu/:id/channels', RED.auth.needsPermission('flows.read'), (req, res) => {
+    RED.httpAdmin.get('/homematic/ccu/:id/channels', (req, res) => {
         const node = RED.nodes.getNode(req.params.id as string) as CcuNode;
         if (!node) {
             res.status(404).json({ error: 'Node not found' });

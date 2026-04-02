@@ -1,7 +1,7 @@
 "use strict";
 const CcuConnection_1 = require("./CcuConnection");
 module.exports = function (RED) {
-    RED.httpAdmin.get('/homematic/ccu/:id/channels', RED.auth.needsPermission('flows.read'), (req, res) => {
+    RED.httpAdmin.get('/homematic/ccu/:id/channels', (req, res) => {
         const node = RED.nodes.getNode(req.params.id);
         if (!node) {
             res.status(404).json({ error: 'Node not found' });
