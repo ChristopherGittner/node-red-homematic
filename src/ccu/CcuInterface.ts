@@ -209,7 +209,7 @@ export class CcuInterface extends EventEmitter {
      */
     public async setValue(device: string, valueName: string, value: number | string): Promise<void> {
         this.log.trace(`setValue: ${device}/${valueName}=${value}`);
-        await this.asyncMethodCall(this.client, "setValue", [device, valueName, value]);
+        return await this.asyncMethodCall(this.client, "setValue", [device, valueName, value]);
     }
 
     // Calls the 'ping' RPC method on the CCU

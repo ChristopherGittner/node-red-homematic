@@ -161,7 +161,7 @@ class CcuInterface extends events_1.default {
      */
     async setValue(device, valueName, value) {
         this.log.trace(`setValue: ${device}/${valueName}=${value}`);
-        await this.asyncMethodCall(this.client, "setValue", [device, valueName, value]);
+        return await this.asyncMethodCall(this.client, "setValue", [device, valueName, value]);
     }
     // Calls the 'ping' RPC method on the CCU
     ping() {

@@ -27,7 +27,7 @@ export = function (RED: NodeAPI): void {
         this.valueName = config.valueName;
 
         this.on("input", (msg: any) => {
-            const value = z.string().or(z.number()).parse(msg.payload);
+            const value = z.coerce.string().parse(msg.payload);
             const iface = z.enum(INTERFACE_TYPE).optional().default(this.interface).parse(msg.iface);
             const channel = z.string().optional().default(this.channel).parse(msg.channel);
             const valueName = z.string().optional().default(this.valueName).parse(msg.valueName);
