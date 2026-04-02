@@ -51,9 +51,9 @@
                     channels
                         .filter(function (c) {
                             if (c.address.indexOf(':') === -1) return false;
-                            if (!c.iface) return true;
+                            if (!c.iface) return false;
                             return isHmIP
-                                ? c.iface.toLowerCase().indexOf('hmip') !== -1
+                                ? c.iface === 'Hm-IP'
                                 : c.iface === 'BidCos-RF';
                         })
                         .forEach(function (c) {
