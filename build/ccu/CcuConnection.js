@@ -186,9 +186,16 @@ class CcuConnection extends events_1.default {
     async reloadRega() {
         try {
             this.log.trace("Reload Channels");
-            this.channels = await (0, Rega_js_1.getChannels)(this.options.ccuHost, this.options.authentication);
-            for (const channel of this.channels) {
+            const previousChannels = this.channels;
+            const channels = await (0, Rega_js_1.getChannels)(this.options.ccuHost, this.options.authentication);
+            for (const channel of channels) {
                 if (channel.channelNumber !== undefined) {
+                    // Reuse previously loaded values unless they were empty (missing or failed).
+                    const previous = previousChannels.find((c) => c.address === channel.address);
+                    if (previous?.values && previous.values.length > 0) {
+                        channel.values = previous.values;
+                        continue;
+                    }
                     switch (channel.iface) {
                         case CcuInterface_js_1.INTERFACE_TYPE.BIDCOSRF:
                             {
@@ -205,6 +212,7 @@ class CcuConnection extends events_1.default {
                     }
                 }
             }
+            this.channels = channels;
         }
         catch (error) {
             this.log.error(`Failed to fetch channels from CCU: ${error}`);
