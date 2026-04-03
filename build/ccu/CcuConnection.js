@@ -191,12 +191,16 @@ class CcuConnection extends events_1.default {
                 if (channel.channelNumber !== undefined) {
                     switch (channel.iface) {
                         case CcuInterface_js_1.INTERFACE_TYPE.BIDCOSRF:
-                            const values = await this.bidCosIface.loadValues(channel.address);
-                            channel.values = Object.keys(values);
+                            {
+                                const values = await this.bidCosIface.loadValues(channel.address);
+                                channel.values = Object.keys(values);
+                            }
                             break;
                         case CcuInterface_js_1.INTERFACE_TYPE.HMIP:
-                            const hmIPValues = await this.hmIPIface.loadValues(channel.address);
-                            channel.values = Object.keys(hmIPValues);
+                            {
+                                const values = await this.hmIPIface.loadValues(channel.address);
+                                channel.values = Object.keys(values);
+                            }
                             break;
                     }
                 }

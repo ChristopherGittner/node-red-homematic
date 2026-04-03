@@ -3,16 +3,23 @@
         category: 'homematic',
         color: '#a6bbcf',
         defaults: {
+            name: { value: "" },
             ccu: { value: "", type: "ccu", required: true },
             interface: { value: "BidCos-RF", required: true },
             channel: { value: "" },
+            channelName: { value: "" },
             valueName: { value: "" }
         },
         inputs: 0,
         outputs: 1,
         icon: "file.svg",
         label: function () {
-            return "Value";
+            if (this.name) return this.name;
+            const ch = this.channelName || this.channel;
+            const v = this.valueName;
+            if (ch && v) return ch + ' / ' + v;
+            if (ch) return ch;
+            return 'value';
         },
         oneditprepare: function () {
             const self = this;
@@ -64,19 +71,30 @@
                         });
 
                     $select.val(current);
+                    const selectedCh = cachedChannels.find(function (c) { return c.address === $select.val(); });
+                    $('#node-input-channelName').val(selectedCh ? selectedCh.name : '');
                     populateValueKeys(resetChannel);
                 });
             }
 
             $('#node-input-ccu').change(function () { loadChannels(false); });
             $('#node-input-interface').change(function () { loadChannels(true); });
-            $('#node-input-channel').change(function () { populateValueKeys(true); });
+            $('#node-input-channel').change(function () {
+                const addr = $(this).val();
+                const ch = cachedChannels.find(function (c) { return c.address === addr; });
+                $('#node-input-channelName').val(ch ? ch.name : '');
+                populateValueKeys(true);
+            });
             loadChannels(false);
         }
     });
 </script>
 
 <script type="text/html" data-template-name="value">
+    <div class="form-row">
+        <label for="node-input-name"><i class="fa fa-tag"></i> Name</label>
+        <input type="text" id="node-input-name" placeholder="(channel / value)">
+    </div>
     <div class="form-row">
         <label for="node-input-ccu"><i class="fa fa-bookmark"></i> CCU</label>
         <input type="ccu" id="node-input-ccu" data-i18n="[placeholder]node-red:common.label">
@@ -100,4 +118,5 @@
             <option value="">-- All Values --</option>
         </select>
     </div>
+    <input type="hidden" id="node-input-channelName">
 </script>
