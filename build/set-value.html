@@ -7,7 +7,7 @@
             ccu: { value: "", type: "ccu", required: true },
             interface: { value: "BidCos-RF", required: true },
             channel: { value: "", required: true },
-            channelName: { value: "" },
+            deviceName: { value: "" },
             valueName: { value: "", required: true }
         },
         inputs: 1,
@@ -15,10 +15,10 @@
         icon: "file.svg",
         label: function () {
             if (this.name) return this.name;
-            const ch = this.channelName || this.channel;
+            const dev = this.deviceName || this.channel;
             const v = this.valueName;
-            if (ch && v) return ch + ' / ' + v;
-            if (ch) return ch;
+            if (dev && v) return dev + ' / ' + v;
+            if (dev) return dev;
             return 'set-value';
         },
         oneditprepare: function () {
@@ -72,7 +72,7 @@
 
                     $select.val(current);
                     const selectedCh = cachedChannels.find(function (c) { return c.address === $select.val(); });
-                    $('#node-input-channelName').val(selectedCh ? selectedCh.name : '');
+                    $('#node-input-deviceName').val(selectedCh ? selectedCh.deviceName || '' : '');
                     populateValueKeys(resetChannel);
                 });
             }
@@ -82,7 +82,7 @@
             $('#node-input-channel').change(function () {
                 const addr = $(this).val();
                 const ch = cachedChannels.find(function (c) { return c.address === addr; });
-                $('#node-input-channelName').val(ch ? ch.name : '');
+                $('#node-input-deviceName').val(ch ? ch.deviceName || '' : '');
                 populateValueKeys(true);
             });
             loadChannels(false);
@@ -93,7 +93,7 @@
 <script type="text/html" data-template-name="set-value">
     <div class="form-row">
         <label for="node-input-name"><i class="fa fa-tag"></i> Name</label>
-        <input type="text" id="node-input-name" placeholder="(channel / value)">
+        <input type="text" id="node-input-name" placeholder="(device / value)">
     </div>
     <div class="form-row">
         <label for="node-input-ccu"><i class="fa fa-bookmark"></i> CCU</label>
@@ -125,5 +125,5 @@
             Override channel/valueName per-message via <code>msg.channel</code> / <code>msg.valueName</code>.
         </label>
     </div>
-    <input type="hidden" id="node-input-channelName">
+    <input type="hidden" id="node-input-deviceName">
 </script>
