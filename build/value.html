@@ -8,6 +8,7 @@
             interface: { value: "BidCos-RF", required: true },
             channel: { value: "" },
             deviceName: { value: "" },
+            channelNumber: { value: "" },
             valueName: { value: "" }
         },
         inputs: 0,
@@ -15,7 +16,9 @@
         icon: "file.svg",
         label: function () {
             if (this.name) return this.name;
-            const dev = this.deviceName || this.channel;
+            const dev = this.deviceName
+                ? this.deviceName + ':' + this.channelNumber
+                : this.channel;
             const v = this.valueName;
             if (dev && v) return dev + ' / ' + v;
             if (dev) return dev;
@@ -80,6 +83,7 @@
                     $select.val(current);
                     const selectedCh = cachedChannels.find(function (c) { return c.address === $select.val(); });
                     $('#node-input-deviceName').val(selectedCh ? selectedCh.deviceName || '' : '');
+                    $('#node-input-channelNumber').val(selectedCh ? selectedCh.channelNumber ?? '' : '');
                     populateValueKeys(resetChannel);
                 });
             }
@@ -90,6 +94,7 @@
                 const addr = $(this).val();
                 const ch = cachedChannels.find(function (c) { return c.address === addr; });
                 $('#node-input-deviceName').val(ch ? ch.deviceName || '' : '');
+                $('#node-input-channelNumber').val(ch ? ch.channelNumber ?? '' : '');
                 populateValueKeys(true);
             });
             setTimeout(function () { loadChannels(false); }, 0);
@@ -126,4 +131,5 @@
         </select>
     </div>
     <input type="hidden" id="node-input-deviceName">
+    <input type="hidden" id="node-input-channelNumber">
 </script>
