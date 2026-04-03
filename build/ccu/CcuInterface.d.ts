@@ -78,8 +78,21 @@ export declare class CcuInterface extends EventEmitter {
     private rpcNewDevices;
     private rpcSystemMulticall;
     private rpcEvent;
-    loadValues(channel: string): Promise<{
-        key: string;
-    }[]>;
+    /**
+     * Loads the current `VALUES` paramset for a given channel.
+     *
+     * Tries `getParamset` first to retrieve live runtime values (e.g. switch state,
+     * temperature). If that call fails or returns an empty result — which can happen
+     * for sleeping / battery-powered devices that are not reachable at the time of
+     * the call — it falls back to `getParamsetDescription`, which returns static
+     * device-type metadata (parameter names, types, ranges, defaults) that is always
+     * available from the CCU without a radio connection.
+     *
+     * @param channel - The full channel address (e.g. `"ABC1234567:1"`).
+     * @returns A record mapping parameter names to their values (live) or their
+     *          metadata descriptors (fallback). Returns an empty object if both
+     *          calls fail.
+     */
+    loadValues(channel: string): Promise<Record<string, any>>;
 }
 //# sourceMappingURL=CcuInterface.d.ts.map

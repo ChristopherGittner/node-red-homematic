@@ -234,15 +234,45 @@ class CcuInterface extends events_1.default {
         }
         callback(null, []);
     }
+    /**
+     * Loads the current `VALUES` paramset for a given channel.
+     *
+     * Tries `getParamset` first to retrieve live runtime values (e.g. switch state,
+     * temperature). If that call fails or returns an empty result — which can happen
+     * for sleeping / battery-powered devices that are not reachable at the time of
+     * the call — it falls back to `getParamsetDescription`, which returns static
+     * device-type metadata (parameter names, types, ranges, defaults) that is always
+     * available from the CCU without a radio connection.
+     *
+     * @param channel - The full channel address (e.g. `"ABC1234567:1"`).
+     * @returns A record mapping parameter names to their values (live) or their
+     *          metadata descriptors (fallback). Returns an empty object if both
+     *          calls fail.
+     */
     async loadValues(channel) {
         try {
             const vals = await this.asyncMethodCall(this.client, "getParamset", [channel, "VALUES"]);
-            return vals;
+            if (vals && typeof vals === "object" && Object.keys(vals).length > 0) {
+                return vals;
+            }
+            this.log.trace(`getParamset returned empty/unexpected for channel ${channel}, falling back to getParamsetDescription`);
         }
         catch (e) {
-            this.log.error(`Error loading values for channel ${channel}: ${e?.message ?? e}`);
-            return [];
+            this.log.trace(`getParamset failed for channel ${channel} (${e?.message ?? e}), falling back to getParamsetDescription`);
         }
+        // Fallback: getParamsetDescription returns static device-type metadata and is always available
+        // even for sleeping/battery-powered devices (e.g. Hm-IP remote controls).
+        // Its keys are the same parameter names we need for channel.values.
+        try {
+            const desc = await this.asyncMethodCall(this.client, "getParamsetDescription", [channel, "VALUES"]);
+            if (desc && typeof desc === "object") {
+                return desc;
+            }
+        }
+        catch (e) {
+            this.log.error(`getParamsetDescription also failed for channel ${channel}: ${e?.message ?? e}`);
+        }
+        return {};
     }
 }
 exports.CcuInterface = CcuInterface;
