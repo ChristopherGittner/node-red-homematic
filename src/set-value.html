@@ -24,6 +24,7 @@
         oneditprepare: function () {
             const self = this;
             let cachedChannels = [];
+            let pendingRequest = null;
 
             function populateValueKeys(resetKey) {
                 const channelAddr = $('#node-input-channel').val();
@@ -45,11 +46,17 @@
                 const ccuId = $('#node-input-ccu').val();
                 if (!ccuId) return;
 
+                if (pendingRequest) {
+                    pendingRequest.abort();
+                    pendingRequest = null;
+                }
+
                 const selectedIface = $('#node-input-interface').val();
                 const isHmIP = selectedIface === 'Hm-IP';
                 const current = resetChannel ? '' : self.channel;
 
-                $.getJSON('/homematic/ccu/' + ccuId + '/channels', function (channels) {
+                pendingRequest = $.getJSON('/homematic/ccu/' + ccuId + '/channels', function (channels) {
+                    pendingRequest = null;
                     cachedChannels = channels;
                     const $select = $('#node-input-channel');
                     $select.empty();
@@ -85,7 +92,7 @@
                 $('#node-input-deviceName').val(ch ? ch.deviceName || '' : '');
                 populateValueKeys(true);
             });
-            loadChannels(false);
+            setTimeout(function () { loadChannels(false); }, 0);
         }
     });
 </script>
